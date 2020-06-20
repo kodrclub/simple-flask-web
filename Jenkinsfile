@@ -42,7 +42,7 @@ pipeline {
                                 serverUrl: apiServer,
                                 namespace: devNamespace
                                ]) {
-                    sh 'kubectl set image deployment/django django="$registry:$imageTag" --record'
+                    sh 'kubectl set image deployment/flask flask="$registry:$imageTag" --record'
                 }
             }
         }
