@@ -37,9 +37,6 @@ pipeline {
             }
         }
         stage('Deploy to K8s') {
-            when {
-                expression { env.GIT_BRANCH == 'develop' }
-            }
             steps{
                 withKubeConfig([credentialsId: minikubeCredential,
                                 serverUrl: apiServer,
