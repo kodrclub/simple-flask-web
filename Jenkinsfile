@@ -36,28 +36,6 @@ pipeline {
                 }
             }
         }
-        stage('Update deployment file') {
-            when {
-                expression { env.GIT_BRANCH == 'develop' }
-            }
-            steps{
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'Git-Encoded', usernameVariable: 'username', passwordVariable: 'password')]){
-                        sh "rm -rf simple-flask-web-deployment"
-                        sh "git clone https://$username:$password@github.com/kodrclub/simple-flask-web-deployment.git"
-                        dir("simple-flask-web-deployment") {
-                            sh "echo \"spec:\n  template:\n    spec:\n      containers:\n        - name: django\n          image: ${registry}:$imageTag\" > patch.yaml"
-                            sh "kubectl patch --local -o yaml -f django-deployment.yaml -p \"\$(cat patch.yaml)\" > new-deploy.yaml"
-                            sh "mv new-deploy.yaml django-deployment.yaml"
-                            sh "rm patch.yaml"
-                            sh "git add ."
-                            sh "git commit -m\"Patched deployment for $imageTag\""
-                            sh "git push https://$username:$password@github.com/kodrclub/simple-flask-web-deployment.git"
-                        }
-                    }
-                }
-            }
-        }
         stage('Deploy to K8s') {
             when {
                 expression { env.GIT_BRANCH == 'develop' }
@@ -67,7 +45,7 @@ pipeline {
                                 serverUrl: apiServer,
                                 namespace: devNamespace
                                ]) {
-                    sh 'kubectl apply -f simple-flask-web-deployment/django-deployment.yaml'
+                    sh 'kubectl set image deployment/django django="$registry:$imageTag" --record'
                 }
             }
         }
